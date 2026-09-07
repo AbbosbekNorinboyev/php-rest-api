@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Controller\HealthController;
 use App\Controller\TaskController;
 use App\Exception\HttpException;
 use App\Http\JsonResponse;
@@ -24,6 +25,28 @@ try {
     $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
     $path = rtrim((string) parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH), '/');
     $segments = explode('/', trim($path, '/'));
+
+    if (($segments[0] ?? null) === 'health') {
+        if ($method !== 'GET' || count($segments) > 2) {
+            throw new HttpException('Endpoint topilmadi', 404);
+        }
+
+        $healthController = new HealthController();
+
+        [$response, $statusCode] = match ($segments[1] ?? null) {
+            null => [$healthController->index(), 200],
+            'info' => [$healthController->info(), 200],
+            'db' => (function () use ($healthController): array {
+                $result = $healthController->db();
+
+                return [$result, $result['status'] === 'UP' ? 200 : 503];
+            })(),
+            default => throw new HttpException('Endpoint topilmadi', 404),
+        };
+
+        JsonResponse::send($response, $statusCode);
+        exit;
+    }
 
     if (($segments[0] ?? null) !== 'api' || ($segments[1] ?? null) !== 'tasks' || count($segments) > 3) {
         throw new HttpException('Endpoint topilmadi', 404);

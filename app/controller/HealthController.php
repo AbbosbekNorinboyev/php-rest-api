@@ -1,55 +1,53 @@
 <?php
 
-namespace App\Controllers;
+declare(strict_types=1);
 
-use Yii;
-use yii\web\Controller;
-use yii\web\Response;
+namespace App\Controller;
 
-class HealthController extends Controller
+use App\Infrastructure\Database;
+use PDO;
+use Throwable;
+
+// Controller: Ilova va ma'lumotlar bazasi holatini tekshiruvchi endpointlar.
+final class HealthController
 {
-    public $enableCsrfValidation = false;
-
     /**
      * GET /health
      *
-     * Application umumiy holatini tekshiradi.
+     * Ilova umumiy holatini tekshiradi.
+     *
+     * @return array<string, mixed>
      */
-    public function actionIndex()
+    public function index(): array
     {
-        Yii::$app->response->format = Response::FORMAT_JSON;
-
         return [
             'status' => 'UP',
-            'application' => Yii::$app->name,
+            'application' => 'php-rest-api',
         ];
     }
 
     /**
      * GET /health/db
      *
-     * PostgreSQL connectionni tekshiradi.
+     * SQLite ulanishini tekshiradi.
+     *
+     * @return array<string, mixed>
      */
-    public function actionDb()
+    public function db(): array
     {
-        Yii::$app->response->format = Response::FORMAT_JSON;
-
         try {
-            Yii::$app->db->open();
-
-            Yii::$app->db->createCommand('SELECT 1')->queryScalar();
+            $connection = Database::getConnection();
+            $connection->query('SELECT 1');
 
             return [
                 'status' => 'UP',
-                'database' => 'PostgreSQL',
+                'database' => 'SQLite',
             ];
-        } catch (\Throwable $e) {
-            Yii::$app->response->statusCode = 503;
-
+        } catch (Throwable $exception) {
             return [
                 'status' => 'DOWN',
-                'database' => 'PostgreSQL',
-                'error' => $e->getMessage(),
+                'database' => 'SQLite',
+                'error' => $exception->getMessage(),
             ];
         }
     }
@@ -57,18 +55,16 @@ class HealthController extends Controller
     /**
      * GET /health/info
      *
-     * Application haqida ma'lumot.
+     * Ilova haqida ma'lumot.
+     *
+     * @return array<string, mixed>
      */
-    public function actionInfo()
+    public function info(): array
     {
-        Yii::$app->response->format = Response::FORMAT_JSON;
-
         return [
-            'application' => Yii::$app->name,
-            'environment' => YII_ENV,
-            'debug' => YII_DEBUG,
+            'application' => 'php-rest-api',
             'php_version' => PHP_VERSION,
-            'yii_version' => Yii::getVersion(),
+            'pdo_drivers' => PDO::getAvailableDrivers(),
         ];
     }
 }
