@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Infrastructure\Database;
+use App\Infrastructure\PostgresDatabase;
 use PDO;
 use Throwable;
 
@@ -36,12 +37,24 @@ final class HealthController
     public function db(): array
     {
         try {
-            $connection = Database::getConnection();
-            $connection->query('SELECT 1');
+            $sqlite = $this->checkConnection(
+                'SQLite',
+                static fn(): PDO => Database::getConnection(),
+            );
+
+            $postgres = $this->checkConnection(
+                'PostgreSQL',
+                static fn(): PDO => PostgresDatabase::getConnection(),
+            );
+
+            $overallStatus = $sqlite['status'] === 'UP' && $postgres['status'] === 'UP' ? 'UP' : 'DOWN';
 
             return [
-                'status' => 'UP',
-                'database' => 'SQLite',
+                'status' => $overallStatus,
+                'databases' => [
+                    $sqlite,
+                    $postgres,
+                ],
             ];
         } catch (Throwable $exception) {
             return [
@@ -66,5 +79,28 @@ final class HealthController
             'php_version' => PHP_VERSION,
             'pdo_drivers' => PDO::getAvailableDrivers(),
         ];
+    }
+
+    /**
+     * @param callable(): PDO $connect
+     * @return array<string, mixed>
+     */
+    private function checkConnection(string $name, callable $connect): array
+    {
+        try {
+            $connection = $connect();
+            $connection->query('SELECT 1');
+
+            return [
+                'status' => 'UP',
+                'database' => $name,
+            ];
+        } catch (Throwable $exception) {
+            return [
+                'status' => 'DOWN',
+                'database' => $name,
+                'error' => $exception->getMessage(),
+            ];
+        }
     }
 }
