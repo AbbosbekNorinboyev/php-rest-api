@@ -31,13 +31,13 @@ API manzili: `http://localhost:8000/api/tasks`
 
 ```
 app/
-├── Controller/TaskController.php  # HTTP endpointlar
-├── Entity/Task.php                # Task domen modeli
-├── Exception/HttpException.php    # Boshqariladigan HTTP xatolari
-├── Http/JsonResponse.php          # JSON response helper
-├── Infrastructure/Database.php    # PDO va SQLite sxemasi
-├── Repository/TaskRepository.php  # Ma'lumotlar qatlami
-└── Service/TaskService.php         # Biznes qoidalari va validatsiya
+├── controller/TaskController.php  # HTTP endpointlar
+├── entity/Task.php                # Task domen modeli
+├── exception/HttpException.php    # Boshqariladigan HTTP xatolari
+├── http/JsonResponse.php          # JSON response helper
+├── infrastructure/Database.php    # PDO va SQLite sxemasi
+├── repository/TaskRepository.php  # Ma'lumotlar qatlami
+└── service/TaskService.php         # Biznes qoidalari va validatsiya
 ```
 
 `public/index.php` routing va dependency yaratishni bajaradi. Har bir qatlamda vazifasini ko'rsatuvchi komment bor.

@@ -99,7 +99,7 @@ final class TaskService
         }
 
         if (in_array($input['is_done'], [0, 1, '0', '1'], true)) {
-            return (bool) $input['is_done'];
+            return (bool)$input['is_done'];
         }
 
         throw new HttpException('is_done boolean bo\'lishi kerak', 422);
